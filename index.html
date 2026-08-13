@@ -523,8 +523,9 @@
 <body>
   <div class="bg-mesh"></div>
 
-  <!-- Audio: poné loading.mp3 en la misma carpeta -->
+  <!-- Audios: poné estos archivos en la misma carpeta -->
   <audio id="loadingSound" src="loading.mp3" loop preload="auto"></audio>
+  <audio id="construccionSound" src="Construccion.mp3" loop preload="auto"></audio>
 
   <div class="container">
     <!-- HERO -->
@@ -571,7 +572,7 @@
       <button class="tab" data-tab="musica">🎵 Música</button>
       <button class="tab" data-tab="tiktok">📱 TikTok</button>
       <button class="tab" data-tab="roblox">🎮 Roblox</button>
-      <button class="tab" data-tab="paginas">📄 Páginas</button>
+      <button class="tab" data-tab="chamba">📄 Páginas</button>
     </div>
 
     <!-- PANEL: REDES -->
@@ -770,13 +771,13 @@
       </div>
     </div>
 
-    <!-- PANEL: PAGINAS (en construcción) -->
-    <div id="paginas" class="panel">
+    <!-- PANEL: CHAMBA (en construcción) -->
+    <div id="chamba" class="panel">
       <div class="construction">
         <div class="construction-emojis">
-          <span class="worker">👷</span>
-          <span class="hammer">🔨</span>
           <span class="crane">🏗️</span>
+          <span class="hammer">🔨</span>
+          <span class="worker">👷</span>
         </div>
         <h3>Ohh. Parece que este lugar está en construcción.</h3>
         <p>
@@ -794,13 +795,29 @@
   </div>
 
   <script>
-    // ===== Tabs =====
+    // ===== Tabs + sonido de Chamba =====
+    const construccionSound = document.getElementById('construccionSound');
+
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
-        document.getElementById(tab.dataset.tab).classList.add('active');
+        const panelId = tab.dataset.tab;
+        document.getElementById(panelId).classList.add('active');
+
+        // Solo suena Construccion.mp3 cuando estás en la pestaña Chamba
+        if (panelId === 'chamba') {
+          try {
+            construccionSound.currentTime = 0;
+            construccionSound.play();
+          } catch (e) {}
+        } else {
+          try {
+            construccionSound.pause();
+            construccionSound.currentTime = 0;
+          } catch (e) {}
+        }
       });
     });
 

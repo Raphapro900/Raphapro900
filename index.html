@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuCompositor · Raphapro900</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08080c;
+      --card: rgba(22, 22, 30, 0.75);
+      --card-solid: #16161e;
+      --accent: #a78bfa;
+      --accent2: #f472b6;
+      --accent3: #38bdf8;
+      --text: #f4f4f8;
+      --muted: #9494a8;
+      --border: rgba(255,255,255,0.08);
+      --glow: 0 0 40px rgba(167, 139, 250, 0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Dongle', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 1.35rem;
+    }
+
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 20% -20%, rgba(167,139,250,0.2), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(244,114,182,0.15), transparent),
+        radial-gradient(ellipse 50% 30% at 50% 50%, rgba(56,189,248,0.08), transparent);
+      animation: meshMove 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes meshMove {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(25deg); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 5rem;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      text-align: center;
+      padding: 2rem 0 2.5rem;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .avatar {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b, #a78bfa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid rgba(255,255,255,0.15);
+      box-shadow: var(--glow), 0 0 0 8px rgba(167,139,250,0.1);
+      animation: float 4s ease-in-out infinite;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .avatar-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--accent);
+      border-right-color: var(--accent2);
+      animation: spin 4s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: clamp(2.8rem, 6vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(105deg, #fff 20%, #c4b5fd 50%, #f9a8d4 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.15rem;
+      line-height: 1.1;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+
+    .location-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding: 0.35rem 1.1rem;
+      background: rgba(167,139,250,0.12);
+      border: 1px solid rgba(167,139,250,0.3);
+      border-radius: 999px;
+      font-size: 1.25rem;
+      color: #c4b5fd;
+    }
+
+    .bio-box {
+      max-width: 520px;
+      margin: 1.3rem auto 0;
+      color: var(--muted);
+      font-size: 1.4rem;
+      line-height: 1.45;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 2.2rem 0;
+    }
+
+    .stat-card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      min-width: 125px;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .stat-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(167,139,250,0.4);
+      box-shadow: var(--glow);
+    }
+
+    .stat-num {
+      font-size: 2.1rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 1.05rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-top: 0.1rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .tab {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.55rem 1.25rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.3rem;
+      font-weight: 400;
+      transition: all 0.25s ease;
+    }
+
+    .tab:hover { color: var(--text); border-color: rgba(167,139,250,0.4); }
+    .tab.active {
+      background: linear-gradient(135deg, rgba(167,139,250,0.25), rgba(244,114,182,0.15));
+      border-color: var(--accent);
+      color: #e9d5ff;
+      box-shadow: 0 0 20px rgba(167,139,250,0.2);
+    }
+
+    .panel { display: none; animation: fadeUp 0.45s ease both; }
+    .panel.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(167,139,250,0.35);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35), var(--glow);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+    .card h3 { font-size: 1.55rem; font-weight: 700; margin-bottom: 0.3rem; line-height: 1.2; }
+    .card p { color: var(--muted); font-size: 1.25rem; margin-bottom: 1rem; line-height: 1.4; }
+
+    .card a.btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.3rem;
+      transition: gap 0.2s, color 0.2s;
+    }
+
+    .card a.btn-link:hover { color: #c4b5fd; gap: 0.6rem; }
+
+    .badge {
+      position: absolute;
+      top: 1.1rem;
+      right: 1.1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-live { background: rgba(74,222,128,0.15); color: #4ade80; }
+    .badge-music { background: rgba(244,114,182,0.15); color: #f9a8d4; }
+    .badge-game { background: rgba(56,189,248,0.15); color: #7dd3fc; }
+
+    /* Music tracks */
+    .track {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.9rem 1.15rem;
+      margin-bottom: 0.7rem;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .track:hover {
+      border-color: rgba(167,139,250,0.4);
+      background: rgba(30,30,42,0.9);
+      transform: translateX(6px);
+    }
+
+    .track-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #312e81, #4c1d95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .track-info { flex: 1; min-width: 0; }
+    .track-title { font-weight: 700; font-size: 1.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+    .track-meta { color: var(--muted); font-size: 1.1rem; margin-top: 0.1rem; }
+
+    .play-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(167,139,250,0.2);
+      border: 1px solid rgba(167,139,250,0.4);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .track:hover .play-btn {
+      background: var(--accent);
+      color: #0f0f13;
+    }
+
+    /* Roblox */
+    .exp {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.65rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.25s;
+    }
+
+    .exp:hover { border-color: rgba(56,189,248,0.4); transform: translateX(4px); }
+    .exp-name { font-weight: 700; font-size: 1.3rem; }
+    .exp-visits { color: var(--muted); font-size: 1.15rem; }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1.3rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6, #d946ef);
+      color: white;
+      box-shadow: 0 4px 20px rgba(139,92,246,0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(139,92,246,0.45);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--accent);
+      background: rgba(167,139,250,0.1);
+    }
+
+    .tiktok-box {
+      background: linear-gradient(135deg, rgba(22,22,30,0.9), rgba(40,20,40,0.6));
+      border: 1px solid rgba(244,114,182,0.25);
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .tiktok-box h3 { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .tiktok-box p { color: var(--muted); margin-bottom: 1.1rem; font-size: 1.35rem; }
+
+    /* ===== CONSTRUCTION / PAGINAS ===== */
+    .construction {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: var(--card);
+      border: 1px dashed rgba(167,139,250,0.35);
+      border-radius: 24px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .construction-emojis {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+      font-size: 3rem;
+      min-height: 70px;
+    }
+
+    .hammer {
+      display: inline-block;
+      animation: hammerHit 0.7s ease-in-out infinite;
+      transform-origin: 70% 90%;
+    }
+
+    @keyframes hammerHit {
+      0%, 100% { transform: rotate(0deg); }
+      30% { transform: rotate(-35deg); }
+      50% { transform: rotate(10deg); }
+      70% { transform: rotate(-20deg); }
+    }
+
+    .crane {
+      display: inline-block;
+      animation: craneSway 2.5s ease-in-out infinite;
+    }
+
+    @keyframes craneSway {
+      0%, 100% { transform: rotate(-6deg); }
+      50% { transform: rotate(6deg); }
+    }
+
+    .worker {
+      display: inline-block;
+      animation: workerBounce 1.4s ease-in-out infinite;
+    }
+
+    @keyframes workerBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .construction h3 {
+      font-size: 1.9rem;
+      margin-bottom: 0.8rem;
+      color: #e9d5ff;
+    }
+
+    .construction p {
+      color: var(--muted);
+      font-size: 1.4rem;
+      line-height: 1.45;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 1.2rem;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .stat-card { min-width: 105px; padding: 0.85rem 1.1rem; }
+      .stat-num { font-size: 1.7rem; }
+      body { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+
+  <!-- Audio: poné loading.mp3 en la misma carpeta -->
+  <audio id="loadingSound" src="loading.mp3" loop preload="auto"></audio>
+
+  <div class="container">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="avatar-wrap">
+        <div class="avatar-ring"></div>
+        <div class="avatar">
+          <img src="photo.png" alt="TuCompositor" title="TuCompositor">
+        </div>
+      </div>
+
+      <h1>TuCompositor</h1>
+      <p class="tagline">Raphapro900 · Productor & Compositor</p>
+      <div class="location-pill">🇵🇾 Limpio, Paraguay</div>
+      <p class="bio-box">
+        Hago muchas músicas de cualquier cosa — para series web, películas web y juegos.<br>
+        <strong style="color:#e9d5ff">Hago música gratis.</strong>
+      </p>
+    </header>
+
+    <!-- STATS (se animan al cargar) -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card" data-target="1079" data-suffix="">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Seguidores TT</div>
+      </div>
+      <div class="stat-card" data-target="82600" data-suffix="K" data-k="true">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Likes TikTok</div>
+      </div>
+      <div class="stat-card" data-target="290" data-suffix="">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Amigos Roblox</div>
+      </div>
+      <div class="stat-card" data-target="0" data-suffix="" data-static="PY">
+        <div class="stat-num">PY</div>
+        <div class="stat-label">Paraguay</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" data-tab="redes">🔗 Redes</button>
+      <button class="tab" data-tab="musica">🎵 Música</button>
+      <button class="tab" data-tab="tiktok">📱 TikTok</button>
+      <button class="tab" data-tab="roblox">🎮 Roblox</button>
+      <button class="tab" data-tab="paginas">📄 Páginas</button>
+    </div>
+
+    <!-- PANEL: REDES -->
+    <div id="redes" class="panel active">
+      <div class="grid">
+        <div class="card">
+          <span class="badge badge-live">Principal</span>
+          <div class="card-icon">🔗</div>
+          <h3>Linktree</h3>
+          <p>Todos sus links en un solo lugar.</p>
+          <a class="btn-link" href="https://linktr.ee/raphael.lugo10" target="_blank" rel="noopener">Abrir Linktree →</a>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">💬</div>
+          <h3>Discord</h3>
+          <p>Servidor oficial (invite desde TikTok).</p>
+          <a class="btn-link" href="https://discord.gg/ZMqBJnnfrn" target="_blank" rel="noopener">Unirse ahora →</a>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">📱</div>
+          <h3>TikTok</h3>
+          <p>@raphapro900tiktok · 1.079 seguidores · 82.6K likes</p>
+          <a class="btn-link" href="https://www.tiktok.com/@raphapro900tiktok" target="_blank" rel="noopener">Ver perfil →</a>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">🐦</div>
+          <h3>X / Twitter</h3>
+          <p>@raphapro900 — poca actividad pública.</p>
+          <a class="btn-link" href="https://x.com/raphapro900" target="_blank" rel="noopener">Ver perfil →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: MÚSICA -->
+    <div id="musica" class="panel">
+      <h3 style="margin-bottom:1.1rem; font-size:1.7rem;">SoundCloud · Tracks</h3>
+      
+      <a class="track" href="https://soundcloud.com/raphapro900/seal" target="_blank" rel="noopener">
+        <div class="track-icon">🦭</div>
+        <div class="track-info">
+          <div class="track-title">Seal.</div>
+          <div class="track-meta">Raphapro900 · 2026</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/preparada" target="_blank" rel="noopener">
+        <div class="track-icon">🎹</div>
+        <div class="track-info">
+          <div class="track-title">PREPARADA</div>
+          <div class="track-meta">Raphapro900 · Ene 2026</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/preparada-instrumental" target="_blank" rel="noopener">
+        <div class="track-icon">🎧</div>
+        <div class="track-info">
+          <div class="track-title">PREPARADA (Instrumental)</div>
+          <div class="track-meta">Raphapro900 · Ene 2026</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/tammys-main-menu" target="_blank" rel="noopener">
+        <div class="track-icon">🎮</div>
+        <div class="track-info">
+          <div class="track-title">Tammy's Kindergarden OST: Main Menu</div>
+          <div class="track-meta">OST · Sep 2025</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/what-you-want-kittykatty-music-trailer" target="_blank" rel="noopener">
+        <div class="track-icon">🐱</div>
+        <div class="track-info">
+          <div class="track-title">What You Want KittyKatty (Music Trailer)</div>
+          <div class="track-meta">Trailer · Ago 2024</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/there-are-many-doors" target="_blank" rel="noopener">
+        <div class="track-icon">🎪</div>
+        <div class="track-info">
+          <div class="track-title">FunnyParky 3 OST – There Are Many Doors...</div>
+          <div class="track-meta">FunnyParky 3 · Ago 2024</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/funnyparky-3-ost-the-circus-is-scary" target="_blank" rel="noopener">
+        <div class="track-icon">🎪</div>
+        <div class="track-info">
+          <div class="track-title">FunnyParky 3 OST – The Circus Is Scary</div>
+          <div class="track-meta">FunnyParky 3 · Ago 2024</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <a class="track" href="https://soundcloud.com/raphapro900/funnyparky-3-ost-big-bird-new-version" target="_blank" rel="noopener">
+        <div class="track-icon">🐦</div>
+        <div class="track-info">
+          <div class="track-title">FunnyParky 3 OST – Big Bird New Version</div>
+          <div class="track-meta">FunnyParky 3 · Ago 2024</div>
+        </div>
+        <div class="play-btn">▶</div>
+      </a>
+
+      <div style="margin-top:2rem;">
+        <h3 style="margin-bottom:1rem; font-size:1.7rem;">Bandcamp</h3>
+        <div class="card">
+          <span class="badge badge-music">Bandcamp</span>
+          <div class="card-icon">💿</div>
+          <h3>Seal.</h3>
+          <p>Limpio, Paraguay · Inspired by Joyful – Chess<br>
+          “Hago muchas músicas… para series web, películas web y juegos!!”</p>
+          <a class="btn-link" href="https://raphapro900.bandcamp.com" target="_blank" rel="noopener">Escuchar en Bandcamp →</a>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://soundcloud.com/raphapro900" target="_blank" rel="noopener">☁️ Todo SoundCloud</a>
+        <a class="btn btn-ghost" href="https://raphapro900.bandcamp.com" target="_blank" rel="noopener">💿 Bandcamp</a>
+      </div>
+    </div>
+
+    <!-- PANEL: TIKTOK -->
+    <div id="tiktok" class="panel">
+      <div class="tiktok-box">
+        <h3>@raphapro900tiktok</h3>
+        <p>
+          <strong style="color:#f9a8d4">1.079</strong> seguidores · 
+          <strong style="color:#f9a8d4">82.6K</strong> likes · 
+          <strong style="color:#f9a8d4">2.626</strong> following
+        </p>
+        <p style="font-size:1.25rem; max-width:420px; margin:0 auto 1.2rem;">
+          Bio: “Hago Música Gratis, Discord nuevo” + Instagram.
+        </p>
+        <a class="btn btn-primary" href="https://www.tiktok.com/@raphapro900tiktok" target="_blank" rel="noopener">
+          Abrir perfil completo en TikTok
+        </a>
+      </div>
+
+      <p style="color:var(--muted); text-align:center; font-size:1.25rem; margin-bottom:1.5rem;">
+        TikTok no permite embeber todos los videos fácilmente. Abrí el perfil para ver los más virales.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-icon">🔥</div>
+          <h3>Videos más vistos</h3>
+          <p>Ordená por “Popular” en su perfil.</p>
+          <a class="btn-link" href="https://www.tiktok.com/@raphapro900tiktok" target="_blank" rel="noopener">Ver populares →</a>
+        </div>
+        <div class="card">
+          <div class="card-icon">🆕</div>
+          <h3>Últimos videos</h3>
+          <p>Ordená por “Latest” para lo más nuevo.</p>
+          <a class="btn-link" href="https://www.tiktok.com/@raphapro900tiktok" target="_blank" rel="noopener">Ver últimos →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL: ROBLOX -->
+    <div id="roblox" class="panel">
+      <div class="card" style="margin-bottom:1.5rem;">
+        <span class="badge badge-game">Roblox</span>
+        <div class="card-icon">🎮</div>
+        <h3>TuCompositor</h3>
+        <p>@flash135478900 · Display name: <strong>TuCompositor</strong></p>
+        <div style="display:flex; gap:1.5rem; flex-wrap:wrap; color:var(--muted); font-size:1.25rem; margin:1rem 0;">
+          <span>👥 290 Amigos</span>
+          <span>⭐ 6 Seguidores</span>
+          <span>➡️ 27 Siguiendo</span>
+        </div>
+        <a class="btn-link" href="https://www.roblox.com/users/3727101373/profile" target="_blank" rel="noopener">Ver perfil en Roblox →</a>
+      </div>
+
+      <h3 style="margin-bottom:1rem; font-size:1.6rem;">El Mundo de Jack</h3>
+      
+      <div class="exp">
+        <div class="exp-name">Jack's World: The Beginning of the Quest</div>
+        <div class="exp-visits">~73 visitas</div>
+      </div>
+      <div class="exp">
+        <div class="exp-name">Jack's World 2: Return of Dark</div>
+        <div class="exp-visits">~10 visitas</div>
+      </div>
+      <div class="exp">
+        <div class="exp-name">Jack's World 3</div>
+        <div class="exp-visits">0 visitas</div>
+      </div>
+    </div>
+
+    <!-- PANEL: PAGINAS (en construcción) -->
+    <div id="paginas" class="panel">
+      <div class="construction">
+        <div class="construction-emojis">
+          <span class="worker">👷</span>
+          <span class="hammer">🔨</span>
+          <span class="crane">🏗️</span>
+        </div>
+        <h3>Ohh. Parece que este lugar está en construcción.</h3>
+        <p>
+          En una actualización futura se activará esto.<br>
+          Él seguirá chambeando...<br><br>
+          Así que eso es todo lo que verás aquí...
+        </p>
+      </div>
+    </div>
+
+    <footer>
+      Hecho con info pública de <strong>TuCompositor / Raphapro900</strong><br>
+      Fuentes: TikTok · SoundCloud · Bandcamp · Roblox · Linktree · Discord · Agosto 2026
+    </footer>
+  </div>
+
+  <script>
+    // ===== Tabs =====
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ===== Counting animation + loading sound =====
+    const sound = document.getElementById('loadingSound');
+    const cards = Array.from(document.querySelectorAll('.stat-card'));
+
+    function formatNum(n, isK) {
+      if (isK) {
+        // 82600 → 82.6K
+        const k = n / 1000;
+        return (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'K';
+      }
+      return Math.floor(n).toLocaleString('es-PY');
+    }
+
+    function animateCount(card, duration = 1400) {
+      return new Promise(resolve => {
+        const el = card.querySelector('.stat-num');
+        const target = parseInt(card.dataset.target, 10) || 0;
+        const isK = card.dataset.k === 'true';
+        const isStatic = card.dataset.static;
+
+        card.classList.add('visible');
+
+        if (isStatic) {
+          el.textContent = isStatic;
+          setTimeout(resolve, 400);
+          return;
+        }
+
+        const start = performance.now();
+
+        function frame(now) {
+          const t = Math.min((now - start) / duration, 1);
+          // easeOutCubic
+          const eased = 1 - Math.pow(1 - t, 3);
+          const current = target * eased;
+          el.textContent = formatNum(current, isK);
+          if (t < 1) {
+            requestAnimationFrame(frame);
+          } else {
+            el.textContent = formatNum(target, isK);
+            resolve();
+          }
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    async function runStatsSequence() {
+      // Intentar reproducir sonido (puede fallar por autoplay policy del navegador)
+      try {
+        sound.currentTime = 0;
+        await sound.play();
+      } catch (e) {
+        // Autoplay bloqueado: el usuario puede hacer click en cualquier lado para activarlo
+        console.log('Audio bloqueado hasta interacción del usuario');
+      }
+
+      // Primero seguidores TT, luego likes, luego amigos Roblox, luego PY
+      for (const card of cards) {
+        await animateCount(card, 1300);
+        await new Promise(r => setTimeout(r, 180));
+      }
+
+      // Parar el sonido cuando terminan todos
+      try {
+        sound.pause();
+        sound.currentTime = 0;
+      } catch (e) {}
+    }
+
+    // Arrancar cuando carga la página
+    window.addEventListener('load', () => {
+      // Pequeño delay para que se vea el 0
+      setTimeout(runStatsSequence, 400);
+    });
+
+    // Si el audio falló por autoplay, arrancarlo en el primer click
+    let audioUnlocked = false;
+    document.body.addEventListener('click', () => {
+      if (!audioUnlocked && sound.paused) {
+        // No reiniciamos la secuencia, solo desbloqueamos por si se necesita después
+        audioUnlocked = true;
+      }
+    }, { once: true });
+
+    /*
+      NOTA para actualizaciones "en vivo":
+      Para que los números se actualicen solos cuando haya un nuevo seguidor / like / amigo,
+      necesitarías un backend o APIs públicas (TikTok no tiene API pública fácil).
+      Por ahora los valores están hardcodeados. Cuando tengas datos frescos,
+      cambiá los data-target de cada .stat-card y recargá.
+    */
+  </script>
+</body>
+</html>

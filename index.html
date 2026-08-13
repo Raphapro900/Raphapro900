@@ -548,21 +548,17 @@
 
     <!-- STATS (se animan al cargar) -->
     <div class="stats-row" id="statsRow">
-      <div class="stat-card" data-target="1079" data-suffix="">
+      <div class="stat-card" data-target="1079">
         <div class="stat-num">0</div>
         <div class="stat-label">Seguidores TT</div>
       </div>
-      <div class="stat-card" data-target="82600" data-suffix="K" data-k="true">
+      <div class="stat-card" data-target="82600" data-k="true">
         <div class="stat-num">0</div>
         <div class="stat-label">Likes TikTok</div>
       </div>
-      <div class="stat-card" data-target="290" data-suffix="">
+      <div class="stat-card" data-target="290">
         <div class="stat-num">0</div>
         <div class="stat-label">Amigos Roblox</div>
-      </div>
-      <div class="stat-card" data-target="0" data-suffix="" data-static="PY">
-        <div class="stat-num">PY</div>
-        <div class="stat-label">Paraguay</div>
       </div>
     </div>
 
@@ -822,39 +818,32 @@
     });
 
     // ===== Counting animation + loading sound =====
+    // loading.mp3 solo suena mientras los números suben; se detiene al terminar
     const sound = document.getElementById('loadingSound');
-    const cards = Array.from(document.querySelectorAll('.stat-card'));
+    // Solo números (sin PY ni textos estáticos)
+    const cards = Array.from(document.querySelectorAll('.stat-card')).filter(c => !c.dataset.static);
 
     function formatNum(n, isK) {
       if (isK) {
-        // 82600 → 82.6K
         const k = n / 1000;
         return (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)) + 'K';
       }
-      return Math.floor(n).toLocaleString('es-PY');
+      return Math.floor(n).toLocaleString('es');
     }
 
-    function animateCount(card, duration = 1400) {
+    function animateCount(card, duration = 1300) {
       return new Promise(resolve => {
         const el = card.querySelector('.stat-num');
         const target = parseInt(card.dataset.target, 10) || 0;
         const isK = card.dataset.k === 'true';
-        const isStatic = card.dataset.static;
 
         card.classList.add('visible');
-
-        if (isStatic) {
-          el.textContent = isStatic;
-          setTimeout(resolve, 400);
-          return;
-        }
 
         const start = performance.now();
 
         function frame(now) {
           const t = Math.min((now - start) / duration, 1);
-          // easeOutCubic
-          const eased = 1 - Math.pow(1 - t, 3);
+          const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
           const current = target * eased;
           el.textContent = formatNum(current, isK);
           if (t < 1) {
@@ -869,50 +858,37 @@
     }
 
     async function runStatsSequence() {
-      // Intentar reproducir sonido (puede fallar por autoplay policy del navegador)
+      // Suena loading.mp3 en loop mientras suben los números
       try {
         sound.currentTime = 0;
         await sound.play();
       } catch (e) {
-        // Autoplay bloqueado: el usuario puede hacer click en cualquier lado para activarlo
         console.log('Audio bloqueado hasta interacción del usuario');
       }
 
-      // Primero seguidores TT, luego likes, luego amigos Roblox, luego PY
+      // Solo números: seguidores TT → likes → amigos Roblox
       for (const card of cards) {
         await animateCount(card, 1300);
-        await new Promise(r => setTimeout(r, 180));
+        await new Promise(r => setTimeout(r, 150));
       }
 
-      // Parar el sonido cuando terminan todos
+      // Cuando dejan de subir → para el sonido
       try {
         sound.pause();
         sound.currentTime = 0;
       } catch (e) {}
     }
 
-    // Arrancar cuando carga la página
     window.addEventListener('load', () => {
-      // Pequeño delay para que se vea el 0
       setTimeout(runStatsSequence, 400);
     });
 
-    // Si el audio falló por autoplay, arrancarlo en el primer click
-    let audioUnlocked = false;
+    // Desbloquear audio en el primer click (política de autoplay del navegador)
     document.body.addEventListener('click', () => {
-      if (!audioUnlocked && sound.paused) {
-        // No reiniciamos la secuencia, solo desbloqueamos por si se necesita después
-        audioUnlocked = true;
+      if (sound.paused && sound.currentTime === 0) {
+        // no reinicia la secuencia, solo desbloquea el audio del navegador
       }
     }, { once: true });
-
-    /*
-      NOTA para actualizaciones "en vivo":
-      Para que los números se actualicen solos cuando haya un nuevo seguidor / like / amigo,
-      necesitarías un backend o APIs públicas (TikTok no tiene API pública fácil).
-      Por ahora los valores están hardcodeados. Cuando tengas datos frescos,
-      cambiá los data-target de cada .stat-card y recargá.
-    */
   </script>
 </body>
 </html>

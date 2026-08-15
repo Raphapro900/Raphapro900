@@ -548,15 +548,15 @@
 
     <!-- STATS (se animan al cargar) -->
     <div class="stats-row" id="statsRow">
-      <div class="stat-card" data-target="1079">
+      <div class="stat-card" data-stat="tt-followers" data-target="1077">
         <div class="stat-num">0</div>
         <div class="stat-label">Seguidores TT</div>
       </div>
-      <div class="stat-card" data-target="82600" data-k="true">
+      <div class="stat-card" data-stat="tt-likes" data-target="82634" data-k="true">
         <div class="stat-num">0</div>
         <div class="stat-label">Likes TikTok</div>
       </div>
-      <div class="stat-card" data-target="290">
+      <div class="stat-card" data-stat="rbx-friends" data-target="290">
         <div class="stat-num">0</div>
         <div class="stat-label">Amigos Roblox</div>
       </div>
@@ -592,7 +592,7 @@
         <div class="card">
           <div class="card-icon">📱</div>
           <h3>TikTok</h3>
-          <p>@raphapro900tiktok · 1.079 seguidores · 82.6K likes</p>
+          <p>@raphapro900tiktok · stats en vivo desde tokcounter</p>
           <a class="btn-link" href="https://www.tiktok.com/@raphapro900tiktok" target="_blank" rel="noopener">Ver perfil →</a>
         </div>
 
@@ -704,9 +704,9 @@
       <div class="tiktok-box">
         <h3>@raphapro900tiktok</h3>
         <p>
-          <strong style="color:#fde047">1.079</strong> seguidores · 
+          <strong style="color:#fde047">1.077</strong> seguidores · 
           <strong style="color:#fde047">82.6K</strong> likes · 
-          <strong style="color:#fde047">2.626</strong> following
+          <strong style="color:#fde047">2.632</strong> following
         </p>
         <p style="font-size:1.25rem; max-width:420px; margin:0 auto 1.2rem;">
           Bio: “Hago Música Gratis, Discord nuevo” + Instagram.
@@ -817,11 +817,23 @@
       });
     });
 
-    // ===== Counting animation + loading sound =====
-    // loading.mp3 solo suena mientras los números suben; se detiene al terminar
+    // ===== Stats: animación + loading.mp3 + actualización en vivo =====
     const sound = document.getElementById('loadingSound');
-    // Solo números (sin PY ni textos estáticos)
-    const cards = Array.from(document.querySelectorAll('.stat-card')).filter(c => !c.dataset.static);
+    const ROBLOX_USER_ID = 3727101373;
+    // Mismo user id que usa livecounts.io / tokcounter
+    const TIKTOK_USER_ID = '7143199037670310917';
+    const POLL_MS = 20000; // cada 20 segundos (similar a livecounts)
+
+    // Valores actuales (se actualizan en vivo)
+    const liveStats = {
+      'tt-followers': 1077,
+      'tt-likes': 82634,
+      'rbx-friends': 290
+    };
+
+    function getCard(stat) {
+      return document.querySelector(`.stat-card[data-stat="${stat}"]`);
+    }
 
     function formatNum(n, isK) {
       if (isK) {
@@ -831,25 +843,30 @@
       return Math.floor(n).toLocaleString('es');
     }
 
-    function animateCount(card, duration = 1300) {
-      return new Promise(resolve => {
+    // Anima de from → to (con sonido)
+    function animateFromTo(card, from, to, duration = 1300) {
+      return new Promise(async resolve => {
         const el = card.querySelector('.stat-num');
-        const target = parseInt(card.dataset.target, 10) || 0;
         const isK = card.dataset.k === 'true';
-
         card.classList.add('visible');
+        card.dataset.target = String(to);
+
+        try {
+          sound.currentTime = 0;
+          await sound.play();
+        } catch (e) {}
 
         const start = performance.now();
-
         function frame(now) {
           const t = Math.min((now - start) / duration, 1);
-          const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
-          const current = target * eased;
+          const eased = 1 - Math.pow(1 - t, 3);
+          const current = from + (to - from) * eased;
           el.textContent = formatNum(current, isK);
           if (t < 1) {
             requestAnimationFrame(frame);
           } else {
-            el.textContent = formatNum(target, isK);
+            el.textContent = formatNum(to, isK);
+            try { sound.pause(); sound.currentTime = 0; } catch (e) {}
             resolve();
           }
         }
@@ -857,39 +874,112 @@
       });
     }
 
-    async function runStatsSequence() {
-      // Por cada número: suena loading → cuenta → para → espera 0.5s → siguiente
-      for (const card of cards) {
-        try {
-          sound.currentTime = 0;
-          await sound.play();
-        } catch (e) {
-          console.log('Audio bloqueado hasta interacción del usuario');
-        }
-
-        await animateCount(card, 1300);
-
-        // Cuando termina de subir ese número → para el sonido
-        try {
-          sound.pause();
-          sound.currentTime = 0;
-        } catch (e) {}
-
-        // Espera 0.5 segundos antes del siguiente
+    // Secuencia inicial: 0 → valor, uno por uno, con 0.5s entre cada uno
+    async function runInitialSequence() {
+      const order = ['tt-followers', 'tt-likes', 'rbx-friends'];
+      for (const key of order) {
+        const card = getCard(key);
+        if (!card) continue;
+        await animateFromTo(card, 0, liveStats[key], 1300);
         await new Promise(r => setTimeout(r, 500));
       }
     }
 
-    window.addEventListener('load', () => {
-      setTimeout(runStatsSequence, 400);
+    // ---- Roblox en vivo (API pública) ----
+    async function fetchRobloxFriends() {
+      const urls = [
+        `https://friends.roblox.com/v1/users/${ROBLOX_USER_ID}/friends/count`,
+        `https://corsproxy.io/?${encodeURIComponent(`https://friends.roblox.com/v1/users/${ROBLOX_USER_ID}/friends/count`)}`
+      ];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (typeof data.count === 'number') return data.count;
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    // TikTok en vivo — mismo backend que usa livecounts.io (tokcounter)
+    async function fetchTikTokStats() {
+      const urls = [
+        `https://tiktok-api.tokcounter.com/user/stats/${TIKTOK_USER_ID}`,
+        `https://corsproxy.io/?${encodeURIComponent(`https://tiktok-api.tokcounter.com/user/stats/${TIKTOK_USER_ID}`)}`
+      ];
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+          });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data && data.success) {
+            return {
+              followers: data.followerCount,
+              likes: data.likeCount
+            };
+          }
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    async function refreshLiveStats(playSoundOnChange = true) {
+      // Roblox
+      const rbx = await fetchRobloxFriends();
+      if (rbx !== null && rbx !== liveStats['rbx-friends']) {
+        const card = getCard('rbx-friends');
+        const from = liveStats['rbx-friends'];
+        liveStats['rbx-friends'] = rbx;
+        if (card) {
+          if (playSoundOnChange) await animateFromTo(card, from, rbx, 1000);
+          else {
+            card.querySelector('.stat-num').textContent = formatNum(rbx, false);
+            card.dataset.target = String(rbx);
+          }
+        }
+      }
+
+      // TikTok (cuando haya fuente disponible)
+      const tt = await fetchTikTokStats();
+      if (tt) {
+        if (typeof tt.followers === 'number' && tt.followers !== liveStats['tt-followers']) {
+          const card = getCard('tt-followers');
+          const from = liveStats['tt-followers'];
+          liveStats['tt-followers'] = tt.followers;
+          if (card && playSoundOnChange) await animateFromTo(card, from, tt.followers, 1000);
+        }
+        if (typeof tt.likes === 'number' && tt.likes !== liveStats['tt-likes']) {
+          const card = getCard('tt-likes');
+          const from = liveStats['tt-likes'];
+          liveStats['tt-likes'] = tt.likes;
+          if (card && playSoundOnChange) await animateFromTo(card, from, tt.likes, 1000);
+        }
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      // 1) Datos frescos de TikTok + Roblox antes de animar
+      try {
+        const [tt, rbx] = await Promise.all([fetchTikTokStats(), fetchRobloxFriends()]);
+        if (tt) {
+          if (typeof tt.followers === 'number') liveStats['tt-followers'] = tt.followers;
+          if (typeof tt.likes === 'number') liveStats['tt-likes'] = tt.likes;
+        }
+        if (rbx !== null) liveStats['rbx-friends'] = rbx;
+      } catch (e) {}
+
+      // 2) Animación inicial 0 → números
+      setTimeout(runInitialSequence, 300);
+
+      // 3) Actualizar en vivo cada 20s (estilo livecounts)
+      setInterval(() => refreshLiveStats(true), POLL_MS);
     });
 
-    // Desbloquear audio en el primer click (política de autoplay del navegador)
-    document.body.addEventListener('click', () => {
-      if (sound.paused && sound.currentTime === 0) {
-        // no reinicia la secuencia, solo desbloquea el audio del navegador
-      }
-    }, { once: true });
+    document.body.addEventListener('click', () => {}, { once: true });
   </script>
 </body>
 </html>
